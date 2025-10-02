@@ -35,6 +35,20 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/version
+
+# Build output
+*.apk
+*.ipa
+*.app-release.apk
+*.app-release.ipa
+*.app-release.apk
+*.tar.gz
 
 # generated native folders
 /ios
