@@ -1,0 +1,12 @@
+services:
+    db:
+      container_name: "rendercon_server_db"
+      image: postgres:18
+      volumes:
+        - postgres_data:/var/lib/postgresql/data/
+      ports:
+        - "5432:5432"
+      env_file:
+        - .env.db
+      networks:
+        backend-network: {}
