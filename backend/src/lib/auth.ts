@@ -53,7 +53,9 @@ export const auth = betterAuth({
             overrideDefaultEmailVerification: true
         }),
         bearer(),
-        lastLoginMethod(),
+        lastLoginMethod({
+            storeInDatabase: true
+        }),
         multiSession({
             maximumSessions: 5
         }),

@@ -4,9 +4,16 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "base" : {
+      "corepack": true
+    },
     "development": {
+      "extends": "base",
+      "environment": "development",
       "developmentClient": true,
-      "distribution": "internal"
+      "ios": {
+        "simulator": true
+      }
     },
     "preview": {
       "distribution": "internal"

@@ -3,7 +3,8 @@
   "version": "1.0.50",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "bun run --watch src/index.ts"
+    "dev": "bun run --watch src/index.ts",
+    "generate-migrations": "drizzle-kit generate"
   },
   "dependencies": {
     "@better-auth/expo": "^1.3.24",

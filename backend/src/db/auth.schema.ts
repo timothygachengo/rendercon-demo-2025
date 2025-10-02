@@ -22,6 +22,7 @@ export const user = pgTable("user", {
   twoFactorEnabled: boolean("two_factor_enabled").default(false),
   phoneNumber: text("phone_number").unique(),
   phoneNumberVerified: boolean("phone_number_verified"),
+  lastLoginMethod: text("last_login_method"),
 });
 
 export const session = pgTable("session", {

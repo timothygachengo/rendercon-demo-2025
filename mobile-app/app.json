@@ -16,7 +16,10 @@
     "ios": {
       "googleServicesFile": "./credentials/GoogleService-Info.plist",
       "supportsTablet": true,
-      "bundleIdentifier": "com.timothymugo.rendercondemo2025"
+      "bundleIdentifier": "com.timothymugo.rendercondemo2025",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "googleServicesFile": "./credentials/google-services.json",
