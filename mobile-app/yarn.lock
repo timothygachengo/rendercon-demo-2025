@@ -3022,7 +3022,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native-google-signin/google-signin@npm:latest":
+"@react-native-firebase/auth@npm:^23.4.0":
+  version: 23.4.0
+  resolution: "@react-native-firebase/auth@npm:23.4.0"
+  dependencies:
+    plist: ^3.1.0
+  peerDependencies:
+    "@react-native-firebase/app": 23.4.0
+    expo: ">=47.0.0"
+  peerDependenciesMeta:
+    expo:
+      optional: true
+  checksum: e04166b393455caa5005c9d4bdaea845f41eec6f390349dc749b42a29d731d8cf25335b43624bcd7e7bc645b9cb256941572ba48ca82d89e04f2e8b6c4c349c5
+  languageName: node
+  linkType: hard
+
+"@react-native-google-signin/google-signin@npm:^16.0.0":
   version: 16.0.0
   resolution: "@react-native-google-signin/google-signin@npm:16.0.0"
   peerDependencies:
@@ -4887,6 +4902,21 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: d48e212ce7c306735f2d065d605716400398fa5c55a0ab898d00969b39f4f6432a44cba47f4fd3027c820d4b9ecc876f2b3e758914833f538720f0d33e8151b1
+  languageName: node
+  linkType: hard
+
+"expo-image@npm:~3.0.8":
+  version: 3.0.8
+  resolution: "expo-image@npm:3.0.8"
+  peerDependencies:
+    expo: "*"
+    react: "*"
+    react-native: "*"
+    react-native-web: "*"
+  peerDependenciesMeta:
+    react-native-web:
+      optional: true
+  checksum: 78b17ab0d8acb6f46f4a464ec077e92b080142a4c3d0c3d296f4f659a191f594b1946ad430560f76646a2a062fb3ce7e5196a9f6bd8f49f838d47c94d05b3c81
   languageName: node
   linkType: hard
 
@@ -7402,7 +7432,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"plist@npm:^3.0.5":
+"plist@npm:^3.0.5, plist@npm:^3.1.0":
   version: 3.1.0
   resolution: "plist@npm:3.1.0"
   dependencies:
@@ -7957,7 +7987,8 @@ __metadata:
     "@better-auth/expo": ^1.3.24
     "@expo/vector-icons": ^15.0.2
     "@react-native-firebase/app": ^23.4.0
-    "@react-native-google-signin/google-signin": latest
+    "@react-native-firebase/auth": ^23.4.0
+    "@react-native-google-signin/google-signin": ^16.0.0
     "@react-navigation/native": ^7.1.8
     "@simplewebauthn/browser": ^13.2.0
     "@types/react": ~19.1.0
@@ -7970,6 +8001,7 @@ __metadata:
     expo-dev-client: ~6.0.13
     expo-device: ~8.0.9
     expo-font: ~14.0.8
+    expo-image: ~3.0.8
     expo-linking: ~8.0.8
     expo-local-authentication: ~17.0.7
     expo-passkey: ^0.2.3

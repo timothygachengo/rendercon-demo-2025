@@ -4,6 +4,7 @@ import { db } from "@/db"; // your drizzle instance
 import { twoFactor, phoneNumber, magicLink, emailOTP, bearer, lastLoginMethod, multiSession, openAPI } from "better-auth/plugins";
 import { expo } from "@better-auth/expo";
 import { expoPasskey } from "expo-passkey/server";
+import * as schema from '@/db/auth.schema';
 
 const trustedOrigins = [
     "rendercondemo2025://",
@@ -13,6 +14,9 @@ const trustedOrigins = [
 export const auth = betterAuth({
     database: drizzleAdapter(db, {
         provider: "pg", // or "mysql", "sqlite"
+        schema: {
+          ...schema
+        }
     }),
     emailAndPassword: {
         enabled: true,
@@ -46,9 +50,9 @@ export const auth = betterAuth({
             }
         }),
         emailOTP({
-            sendVerificationOTP: async ({ email, otp }) => {
+            sendVerificationOTP: async ({ email, otp, type }) => {
                 // Implement your email sending logic here
-                console.log(`Send OTP to ${email}: ${otp}`);
+                console.log(`Send ${type} OTP to ${email}: ${otp}`);
             },
             overrideDefaultEmailVerification: true
         }),
