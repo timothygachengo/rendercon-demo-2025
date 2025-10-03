@@ -1,6 +1,6 @@
 import { API_BASE_URL } from "@/src/constants";
 import { expoClient } from "@better-auth/expo/client";
-import { emailOTPClient, lastLoginMethodClient, phoneNumberClient, twoFactorClient } from "better-auth/client/plugins";
+import { emailOTPClient, lastLoginMethodClient, multiSessionClient, phoneNumberClient, twoFactorClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 import * as SecureStore from "expo-secure-store";
 
@@ -16,5 +16,6 @@ export const authClient = createAuthClient({
         phoneNumberClient(),
         emailOTPClient(),
         lastLoginMethodClient(),
+        multiSessionClient(),
     ]
 });

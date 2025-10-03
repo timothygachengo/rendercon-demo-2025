@@ -1,13 +1,14 @@
+import { useColorScheme } from '@/src/components/useColorScheme';
+import { authClient } from '@/src/lib/auth-client';
+import { configureGoogleSignIn } from '@/src/lib/google-signin';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
-import { useColorScheme } from '@/src/components/useColorScheme';
-import { configureGoogleSignIn } from '@/src/lib/google-signin';
-import { StatusBar } from 'expo-status-bar';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -27,6 +28,7 @@ export default function RootLayout() {
     SpaceMono: require('../../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   });
+  const { data: session, isPending } = authClient.useSession();
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -38,6 +40,12 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
+
+  useEffect(() => {
+    if (!isPending && session?.user) {
+      router.replace('/(tabs)');
+    }
+  }, [session]);
 
   // Configure Google Sign In when app starts
   useEffect(() => {

@@ -1,7 +1,9 @@
 import { Text, View } from '@/src/components/Themed';
 import { authClient } from '@/src/lib/auth-client';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
 import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import {
   ActivityIndicator,
   Alert,
@@ -12,38 +14,43 @@ import {
   TextInput,
   TouchableOpacity,
 } from 'react-native';
+import { z } from 'zod';
+
+const forgotPasswordSchema = z.object({
+  email: z.string().min(1, 'Email is required').email('Invalid email address'),
+});
+
+type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordScreen() {
-  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState('');
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ForgotPasswordFormData>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: '',
+    },
+  });
 
-  const handleResetPassword = async () => {
-    if (!email) {
-      Alert.alert('Error', 'Please enter your email address');
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
-      return;
-    }
-
+  const onSubmit = async (data: ForgotPasswordFormData) => {
     setLoading(true);
     try {
       const result = await authClient.forgetPassword({
-        email,
+        email: data.email,
         redirectTo: '/reset-password',
       });
 
       if (result.error) {
         Alert.alert('Error', result.error.message || 'Unable to send reset email');
       } else {
+        setSubmittedEmail(data.email);
         setEmailSent(true);
       }
     } catch (error) {
@@ -64,7 +71,7 @@ export default function ForgotPasswordScreen() {
           <Text style={styles.title}>Check Your Email</Text>
           <Text style={styles.successMessage}>
             We've sent password reset instructions to{'\n'}
-            <Text style={styles.emailText}>{email}</Text>
+            <Text style={styles.emailText}>{submittedEmail}</Text>
           </Text>
           <Text style={styles.instructions}>
             Please check your inbox and follow the link to reset your password.
@@ -81,7 +88,8 @@ export default function ForgotPasswordScreen() {
             style={styles.resendButton}
             onPress={() => {
               setEmailSent(false);
-              setEmail('');
+              setSubmittedEmail('');
+              reset();
             }}
           >
             <Text style={styles.resendButtonText}>Try Different Email</Text>
@@ -109,22 +117,32 @@ export default function ForgotPasswordScreen() {
           <View style={styles.form}>
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your email"
-                placeholderTextColor="#999"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-                editable={!loading}
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[styles.input, errors.email && styles.inputError]}
+                    placeholder="Enter your email"
+                    placeholderTextColor="#999"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    editable={!loading}
+                  />
+                )}
               />
+              {errors.email && (
+                <Text style={styles.errorText}>{errors.email.message}</Text>
+              )}
             </View>
 
             <TouchableOpacity
               style={[styles.resetButton, loading && styles.buttonDisabled]}
-              onPress={handleResetPassword}
+              onPress={handleSubmit(onSubmit)}
               disabled={loading}
             >
               {loading ? (
@@ -191,6 +209,14 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     backgroundColor: '#fff',
+  },
+  inputError: {
+    borderColor: '#FF3B30',
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 12,
+    marginTop: 4,
   },
   resetButton: {
     backgroundColor: '#007AFF',

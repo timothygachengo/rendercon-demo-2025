@@ -2,8 +2,10 @@ import { GoogleSignInButton } from '@/src/components/GoogleSignInButton';
 import { Text, View } from '@/src/components/Themed';
 import { authClient } from '@/src/lib/auth-client';
 import { configureGoogleSignIn, handleGoogleSignIn } from '@/src/lib/google-signin';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, router } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import {
   ActivityIndicator,
   Alert,
@@ -14,57 +16,52 @@ import {
   TextInput,
   TouchableOpacity,
 } from 'react-native';
+import { z } from 'zod';
+
+const signUpSchema = z
+  .object({
+    name: z.string().min(1, 'Name is required'),
+    email: z.string().min(1, 'Email is required').email('Invalid email address'),
+    password: z.string().min(8, 'Password must be at least 8 characters long'),
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
+type SignUpFormData = z.infer<typeof signUpSchema>;
 
 export default function SignUpScreen() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+  });
 
   useEffect(() => {
     // Configure Google Sign In on component mount
     configureGoogleSignIn();
   }, []);
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const validatePassword = (password: string) => {
-    return password.length >= 8;
-  };
-
-  const handleSignUp = async () => {
-    // Validation
-    if (!name || !email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
-      return;
-    }
-
-    if (!validatePassword(password)) {
-      Alert.alert('Error', 'Password must be at least 8 characters long');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return;
-    }
-
+  const onSubmit = async (data: SignUpFormData) => {
     setLoading(true);
     try {
       const result = await authClient.signUp.email({
-        email,
-        password,
-        name,
+        email: data.email,
+        password: data.password,
+        name: data.name,
       });
 
       if (result.error) {
@@ -125,67 +122,108 @@ export default function SignUpScreen() {
           <View style={styles.form}>
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Full Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your full name"
-                placeholderTextColor="#999"
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-                autoComplete="name"
-                editable={!loading}
+              <Controller
+                control={control}
+                name="name"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[styles.input, errors.name && styles.inputError]}
+                    placeholder="Enter your full name"
+                    placeholderTextColor="#999"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="words"
+                    autoComplete="name"
+                    editable={!loading}
+                  />
+                )}
               />
+              {errors.name && (
+                <Text style={styles.errorText}>{errors.name.message}</Text>
+              )}
             </View>
 
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your email"
-                placeholderTextColor="#999"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-                editable={!loading}
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[styles.input, errors.email && styles.inputError]}
+                    placeholder="Enter your email"
+                    placeholderTextColor="#999"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    editable={!loading}
+                  />
+                )}
               />
+              {errors.email && (
+                <Text style={styles.errorText}>{errors.email.message}</Text>
+              )}
             </View>
 
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Create a password"
-                placeholderTextColor="#999"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-                autoComplete="password-new"
-                editable={!loading}
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[styles.input, errors.password && styles.inputError]}
+                    placeholder="Create a password"
+                    placeholderTextColor="#999"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoComplete="password-new"
+                    editable={!loading}
+                  />
+                )}
               />
-              <Text style={styles.helperText}>Must be at least 8 characters</Text>
+              {errors.password ? (
+                <Text style={styles.errorText}>{errors.password.message}</Text>
+              ) : (
+                <Text style={styles.helperText}>Must be at least 8 characters</Text>
+              )}
             </View>
 
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Confirm Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Re-enter your password"
-                placeholderTextColor="#999"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-                autoCapitalize="none"
-                autoComplete="password-new"
-                editable={!loading}
+              <Controller
+                control={control}
+                name="confirmPassword"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[styles.input, errors.confirmPassword && styles.inputError]}
+                    placeholder="Re-enter your password"
+                    placeholderTextColor="#999"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoComplete="password-new"
+                    editable={!loading}
+                  />
+                )}
               />
+              {errors.confirmPassword && (
+                <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>
+              )}
             </View>
 
             <TouchableOpacity
               style={[styles.signUpButton, loading && styles.buttonDisabled]}
-              onPress={handleSignUp}
+              onPress={handleSubmit(onSubmit)}
               disabled={loading}
             >
               {loading ? (
@@ -265,6 +303,14 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     backgroundColor: '#fff',
+  },
+  inputError: {
+    borderColor: '#FF3B30',
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 12,
+    marginTop: 4,
   },
   helperText: {
     fontSize: 12,

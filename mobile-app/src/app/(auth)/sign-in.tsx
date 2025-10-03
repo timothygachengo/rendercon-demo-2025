@@ -2,8 +2,10 @@ import { GoogleSignInButton } from '@/src/components/GoogleSignInButton';
 import { Text, View } from '@/src/components/Themed';
 import { authClient } from '@/src/lib/auth-client';
 import { configureGoogleSignIn, handleGoogleSignIn } from '@/src/lib/google-signin';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, router } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import {
   ActivityIndicator,
   Alert,
@@ -14,29 +16,42 @@ import {
   TextInput,
   TouchableOpacity,
 } from 'react-native';
+import { z } from 'zod';
+
+const signInSchema = z.object({
+  email: z.string().min(1, 'Email is required').email('Invalid email address'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+type SignInFormData = z.infer<typeof signInSchema>;
 
 export default function SignInScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignInFormData>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
   useEffect(() => {
     // Configure Google Sign In on component mount
     configureGoogleSignIn();
   }, []);
 
-  const handleSignIn = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
-
+  const onSubmit = async (data: SignInFormData) => {
     setLoading(true);
     try {
       const result = await authClient.signIn.email({
-        email,
-        password,
+        email: data.email,
+        password: data.password,
       });
 
       if (result.error) {
@@ -87,32 +102,52 @@ export default function SignInScreen() {
           <View style={styles.form}>
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your email"
-                placeholderTextColor="#999"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-                editable={!loading}
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[styles.input, errors.email && styles.inputError]}
+                    placeholder="Enter your email"
+                    placeholderTextColor="#999"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    editable={!loading}
+                  />
+                )}
               />
+              {errors.email && (
+                <Text style={styles.errorText}>{errors.email.message}</Text>
+              )}
             </View>
 
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your password"
-                placeholderTextColor="#999"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-                autoComplete="password"
-                editable={!loading}
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[styles.input, errors.password && styles.inputError]}
+                    placeholder="Enter your password"
+                    placeholderTextColor="#999"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoComplete="password"
+                    editable={!loading}
+                  />
+                )}
               />
+              {errors.password && (
+                <Text style={styles.errorText}>{errors.password.message}</Text>
+              )}
             </View>
 
             <TouchableOpacity
@@ -125,7 +160,7 @@ export default function SignInScreen() {
 
             <TouchableOpacity
               style={[styles.signInButton, loading && styles.buttonDisabled]}
-              onPress={handleSignIn}
+              onPress={handleSubmit(onSubmit)}
               disabled={loading}
             >
               {loading ? (
@@ -205,6 +240,14 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     backgroundColor: '#fff',
+  },
+  inputError: {
+    borderColor: '#FF3B30',
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 12,
+    marginTop: 4,
   },
   forgotPasswordButton: {
     alignSelf: 'flex-end',

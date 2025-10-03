@@ -2156,6 +2156,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@hookform/resolvers@npm:^5.2.2":
+  version: 5.2.2
+  resolution: "@hookform/resolvers@npm:5.2.2"
+  dependencies:
+    "@standard-schema/utils": ^0.3.0
+  peerDependencies:
+    react-hook-form: ^7.55.0
+  checksum: 131b1c4c763949164825634058fbe126041f1375622fddcb4f833af57e89665a2672474c778e604583d7447cff8252ab7df460240269e91eb5683646a3c9bebb
+  languageName: node
+  linkType: hard
+
 "@isaacs/cliui@npm:^8.0.2":
   version: 8.0.2
   resolution: "@isaacs/cliui@npm:8.0.2"
@@ -3373,6 +3384,13 @@ __metadata:
   dependencies:
     "@sinonjs/commons": ^3.0.0
   checksum: 614d30cb4d5201550c940945d44c9e0b6d64a888ff2cd5b357f95ad6721070d6b8839cd10e15b76bf5e14af0bcc1d8f9ec00d49a46318f1f669a4bec1d7f3148
+  languageName: node
+  linkType: hard
+
+"@standard-schema/utils@npm:^0.3.0":
+  version: 0.3.0
+  resolution: "@standard-schema/utils@npm:0.3.0"
+  checksum: 7084f875d322792f2e0a5904009434c8374b9345b09ba89828b68fd56fa3c2b366d35bf340d9e8c72736ef01793c2f70d350c372ed79845dc3566c58d34b4b51
   languageName: node
   linkType: hard
 
@@ -7676,6 +7694,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-hook-form@npm:^7.63.0":
+  version: 7.63.0
+  resolution: "react-hook-form@npm:7.63.0"
+  peerDependencies:
+    react: ^16.8.0 || ^17 || ^18 || ^19
+  checksum: 7194e8c4be1d7e618765b603bd4ab7b8bb44ada24d1d8395fbe4c8bf9daf012485396a4629cf1c25d71ffb618762fb0689e31f9f389109963a082aaf182784c0
+  languageName: node
+  linkType: hard
+
 "react-is@npm:^18.0.0":
   version: 18.3.1
   resolution: "react-is@npm:18.3.1"
@@ -7986,6 +8013,7 @@ __metadata:
   dependencies:
     "@better-auth/expo": ^1.3.24
     "@expo/vector-icons": ^15.0.2
+    "@hookform/resolvers": ^5.2.2
     "@react-native-firebase/app": ^23.4.0
     "@react-native-firebase/auth": ^23.4.0
     "@react-native-google-signin/google-signin": ^16.0.0
@@ -8013,6 +8041,7 @@ __metadata:
     expo-web-browser: ~15.0.8
     react: 19.1.0
     react-dom: 19.1.0
+    react-hook-form: ^7.63.0
     react-native: 0.81.4
     react-native-mmkv: ^3.3.3
     react-native-reanimated: ~4.1.1
@@ -8022,6 +8051,7 @@ __metadata:
     react-native-worklets: 0.5.1
     react-test-renderer: 19.1.0
     typescript: ~5.9.2
+    zod: ^4.1.11
   languageName: unknown
   linkType: soft
 
@@ -9391,7 +9421,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^4.1.5":
+"zod@npm:^4.1.11, zod@npm:^4.1.5":
   version: 4.1.11
   resolution: "zod@npm:4.1.11"
   checksum: 022d59f85ebe054835fbcdc96a93c01479a64321104f846cb5644812c91e00d17ae3479f823956ec9b04e4351dd32841e1f12c567e81bc43f6e21ef5cc02ce3c
