@@ -2,6 +2,19 @@ import { Elysia, } from "elysia";
 import { auth } from "./lib/auth";
 import { cors } from "@elysiajs/cors";
 
+const posts = [
+  {
+    id: 1,
+    title: "First Post",
+    content: "This is the content of the first post.",
+  },
+  {
+    id: 2,
+    title: "Second Post",
+    content: "This is the content of the second post.",
+  }
+]
+
 const betterAuth = new Elysia({ name: "better-auth" })
   .mount(auth.handler)
   .macro({
@@ -28,8 +41,11 @@ const app = new Elysia()
       allowedHeaders: ["Content-Type", "Authorization"],
     }),
   )
+  .use(betterAuth)
 .get("/", () => "Hello Elysia")
-.mount(auth.handler)
+.get('/posts', ({ user, session }) => posts, {
+  auth: true
+})
 .listen(3000);
 
 console.log(
