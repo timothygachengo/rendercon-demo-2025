@@ -87,7 +87,7 @@ export const twoFactor = pgTable("two_factor", {
     .references(() => user.id, { onDelete: "cascade" }),
 });
 
-export const authPasskey = pgTable("auth_passkey", {
+export const user_passkeys = pgTable("user_passkeys", {
   id: text("id").primaryKey(),
   userId: text("user_id")
     .notNull()
@@ -106,7 +106,7 @@ export const authPasskey = pgTable("auth_passkey", {
   aaguid: text("aaguid"),
 });
 
-export const passkeyChallenge = pgTable("passkey_challenge", {
+export const auth_challenges = pgTable("auth_challenges", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
   challenge: text("challenge").notNull(),

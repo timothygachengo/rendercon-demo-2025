@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.timothymugo.rendercondemo2025",
+      "sha256_cert_fingerprints": [
+        "FB:E7:D2:4E:BC:35:F4:C2:EF:C8:9D:66:C8:22:63:9D:CE:E4:6D:C9:5F:FD:BF:DD:07:8A:DA:3B:1D:A8:9D:45"
+      ]
+    }
+  }
+]

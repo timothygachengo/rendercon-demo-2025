@@ -1,6 +1,7 @@
 import { GoogleSignInButton } from '@/src/components/GoogleSignInButton';
+import { PasskeyButton } from '@/src/components/PasskeyButton';
 import { Text, View } from '@/src/components/Themed';
-import { authClient } from '@/src/lib/auth-client';
+import { authClient, authenticateWithPasskey, isPasskeySupported } from '@/src/lib/auth-client';
 import { configureGoogleSignIn, handleGoogleSignIn } from '@/src/lib/google-signin';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, router } from 'expo-router';
@@ -28,6 +29,8 @@ type SignInFormData = z.infer<typeof signInSchema>;
 export default function SignInScreen() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const [passkeyAvailable, setPasskeyAvailable] = useState(false);
 
   const {
     control,
@@ -44,7 +47,20 @@ export default function SignInScreen() {
   useEffect(() => {
     // Configure Google Sign In on component mount
     configureGoogleSignIn();
+
+    // Check if passkey is supported on this device
+    checkPasskeySupport();
   }, []);
+
+  const checkPasskeySupport = async () => {
+    try {
+      const supported = await isPasskeySupported();
+      setPasskeyAvailable(supported);
+    } catch (error) {
+      console.error('Error checking passkey support:', error);
+      setPasskeyAvailable(false);
+    }
+  };
 
   const onSubmit = async (data: SignInFormData) => {
     setLoading(true);
@@ -83,6 +99,30 @@ export default function SignInScreen() {
       console.error('Google sign in error:', error);
     } finally {
       setGoogleLoading(false);
+    }
+  };
+
+  const handlePasskeySignIn = async () => {
+    setPasskeyLoading(true);
+    try {
+      const result = await authenticateWithPasskey({
+        rpId: 'https://owl-immune-hardly.ngrok-free.app',
+      });
+
+      if (result.error) {
+        Alert.alert(
+          'Authentication Failed',
+          result.error.message || 'Failed to authenticate with passkey'
+        );
+      } else {
+        // Successfully authenticated
+        router.replace('/(tabs)');
+      }
+    } catch (error) {
+      console.error('Passkey authentication error:', error);
+      Alert.alert('Error', 'An error occurred during passkey authentication');
+    } finally {
+      setPasskeyLoading(false);
     }
   };
 
@@ -182,6 +222,16 @@ export default function SignInScreen() {
               disabled={loading}
               label="Sign in with Google"
             />
+
+            {passkeyAvailable && (
+              <PasskeyButton
+                onPress={handlePasskeySignIn}
+                loading={passkeyLoading}
+                disabled={loading || googleLoading}
+                label="Sign in with Biometric"
+                variant="secondary"
+              />
+            )}
 
             <View style={styles.signUpContainer}>
               <Text style={styles.signUpText}>Don't have an account? </Text>

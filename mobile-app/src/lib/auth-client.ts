@@ -13,7 +13,9 @@ export const authClient = createAuthClient({
             storagePrefix: "rendercondemo2025",
             storage: SecureStore,
         }),
-        expoPasskeyClient(),
+        expoPasskeyClient({
+            storagePrefix: "rendercondemo2025",
+        }),
         twoFactorClient(),
         phoneNumberClient(),
         emailOTPClient(),
@@ -21,3 +23,11 @@ export const authClient = createAuthClient({
         multiSessionClient(),
     ]
 });
+
+export const {
+    registerPasskey,
+    authenticateWithPasskey,
+    listPasskeys,
+    revokePasskey,
+    isPasskeySupported
+  } = authClient;

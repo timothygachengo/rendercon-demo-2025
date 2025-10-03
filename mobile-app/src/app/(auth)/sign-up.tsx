@@ -1,6 +1,7 @@
 import { GoogleSignInButton } from '@/src/components/GoogleSignInButton';
+import { PasskeyButton } from '@/src/components/PasskeyButton';
 import { Text, View } from '@/src/components/Themed';
-import { authClient } from '@/src/lib/auth-client';
+import { authClient, isPasskeySupported, registerPasskey } from '@/src/lib/auth-client';
 import { configureGoogleSignIn, handleGoogleSignIn } from '@/src/lib/google-signin';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, router } from 'expo-router';
@@ -35,6 +36,10 @@ type SignUpFormData = z.infer<typeof signUpSchema>;
 export default function SignUpScreen() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [passkeyAvailable, setPasskeyAvailable] = useState(false);
+  const [showPasskeyPrompt, setShowPasskeyPrompt] = useState(false);
+  const [registeredUserId, setRegisteredUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState('');
 
   const {
     control,
@@ -53,7 +58,20 @@ export default function SignUpScreen() {
   useEffect(() => {
     // Configure Google Sign In on component mount
     configureGoogleSignIn();
+
+    // Check if passkey is supported on this device
+    checkPasskeySupport();
   }, []);
+
+  const checkPasskeySupport = async () => {
+    try {
+      const supported = await isPasskeySupported();
+      setPasskeyAvailable(supported);
+    } catch (error) {
+      console.error('Error checking passkey support:', error);
+      setPasskeyAvailable(false);
+    }
+  };
 
   const onSubmit = async (data: SignUpFormData) => {
     setLoading(true);
@@ -67,16 +85,14 @@ export default function SignUpScreen() {
       if (result.error) {
         Alert.alert('Sign Up Failed', result.error.message || 'Unable to create account');
       } else {
-        Alert.alert(
-          'Success',
-          'Account created successfully! You can now sign in.',
-          [
-            {
-              text: 'OK',
-              onPress: () => router.replace('/(tabs)'),
-            },
-          ]
-        );
+        // If passkey is available, prompt user to register it
+        if (passkeyAvailable && result.data?.user?.id) {
+          setRegisteredUserId(result.data.user.id);
+          setUserEmail(data.email);
+          setShowPasskeyPrompt(true);
+        } else {
+          router.replace('/(tabs)');
+        }
       }
     } catch (error) {
       Alert.alert('Error', 'An error occurred during sign up');
@@ -84,6 +100,46 @@ export default function SignUpScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRegisterPasskey = async () => {
+    if (!registeredUserId || !userEmail) return;
+
+    try {
+      const result = await registerPasskey({
+        userId: registeredUserId,
+        userName: userEmail,
+        rpId: 'https://owl-immune-hardly.ngrok-free.app',
+        rpName: 'Rendercon Demo 2025',
+        authenticatorSelection: {
+          userVerification: 'preferred',
+          residentKey: 'preferred',
+        },
+      });
+
+      if (result.error) {
+        Alert.alert(
+          'Passkey Registration Failed',
+          result.error.message || 'Failed to register passkey. You can set it up later in settings.',
+          [{ text: 'OK', onPress: () => router.replace('/(tabs)') }]
+        );
+      } else {
+        Alert.alert(
+          'Success',
+          'Passkey registered successfully! You can now use biometric authentication.',
+          [{ text: 'OK', onPress: () => router.replace('/(tabs)') }]
+        );
+      }
+    } catch (error) {
+      console.error('Passkey registration error:', error);
+      Alert.alert('Error', 'An error occurred while registering passkey', [
+        { text: 'OK', onPress: () => router.replace('/(tabs)') },
+      ]);
+    }
+  };
+
+  const handleSkipPasskey = () => {
+    router.replace('/(tabs)');
   };
 
   const handleGoogleSignUpPress = async () => {
@@ -105,6 +161,33 @@ export default function SignUpScreen() {
       setGoogleLoading(false);
     }
   };
+
+  // Show passkey prompt after successful registration
+  if (showPasskeyPrompt) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.passkeyPromptContent}>
+          <Text style={styles.title}>Setup Biometric Login</Text>
+          <Text style={styles.passkeyPromptText}>
+            Would you like to enable biometric authentication for faster and more secure sign-ins?
+          </Text>
+
+          <PasskeyButton
+            onPress={handleRegisterPasskey}
+            label="Enable Biometric Login"
+            variant="primary"
+          />
+
+          <TouchableOpacity
+            style={styles.skipButton}
+            onPress={handleSkipPasskey}
+          >
+            <Text style={styles.skipButtonText}>Skip for now</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -360,6 +443,28 @@ const styles = StyleSheet.create({
   },
   signInLink: {
     fontSize: 14,
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  passkeyPromptContent: {
+    flex: 1,
+    padding: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  passkeyPromptText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginVertical: 32,
+    opacity: 0.7,
+    lineHeight: 24,
+  },
+  skipButton: {
+    marginTop: 16,
+    padding: 16,
+  },
+  skipButtonText: {
+    fontSize: 16,
     color: '#007AFF',
     fontWeight: '600',
   },

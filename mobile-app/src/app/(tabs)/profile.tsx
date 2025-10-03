@@ -1,10 +1,10 @@
 import { useColorScheme } from '@/src/components/useColorScheme';
 import Colors from '@/src/constants/Colors';
-import { authClient } from '@/src/lib/auth-client';
+import { authClient, isPasskeySupported, listPasskeys, registerPasskey, revokePasskey } from '@/src/lib/auth-client';
 import { handleGoogleSignOut } from '@/src/lib/google-signin';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -29,6 +29,15 @@ interface Session {
   createdAt: Date;
 }
 
+interface Passkey {
+  id: string;
+  credentialId: string;
+  platform: string;
+  lastUsed: Date;
+  createdAt: Date;
+  status: string;
+}
+
 const Profile = () => {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
@@ -43,8 +52,98 @@ const Profile = () => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [passkeys, setPasskeys] = useState<Passkey[]>([]);
+  const [passkeySupported, setPasskeySupported] = useState(false);
 
   const user = session?.user;
+
+  useEffect(() => {
+    checkPasskeySupport();
+    if (user) {
+      loadPasskeys();
+    }
+  }, [user]);
+
+  const checkPasskeySupport = async () => {
+    try {
+      const supported = await isPasskeySupported();
+      setPasskeySupported(supported);
+    } catch (error) {
+      console.error('Error checking passkey support:', error);
+      setPasskeySupported(false);
+    }
+  };
+
+  const loadPasskeys = async () => {
+    try {
+      const result = await listPasskeys({ userId: user?.id || '' });
+      if (result.error) {
+        console.error('Failed to load passkeys:', result.error);
+      } else {
+        setPasskeys((result.data?.passkeys || []) as unknown as Passkey[]);
+      }
+    } catch (error) {
+      console.error('Error loading passkeys:', error);
+    }
+  };
+
+  const handleAddPasskey = async () => {
+    if (!user) return;
+
+    try {
+      const result = await registerPasskey({
+        userId: user.id,
+        userName: user.email,
+        rpId: 'https://owl-immune-hardly.ngrok-free.app',
+        rpName: 'Rendercon Demo 2025',
+        authenticatorSelection: {
+          userVerification: 'required',
+          residentKey: 'preferred',
+        },
+      });
+
+      if (result.error) {
+        Alert.alert('Failed to Add Passkey', result.error.message || 'Could not register passkey');
+      } else {
+        Alert.alert('Success', 'Passkey added successfully');
+        loadPasskeys();
+      }
+    } catch (error) {
+      console.error('Error adding passkey:', error);
+      Alert.alert('Error', 'An error occurred while adding passkey');
+    }
+  };
+
+  const handleRemovePasskey = async (credentialId: string) => {
+    Alert.alert(
+      'Remove Passkey',
+      'Are you sure you want to remove this passkey?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const result = await revokePasskey({
+                userId: user?.id || '',
+                credentialId
+              });
+              if (result.error) {
+                Alert.alert('Failed to Remove', result.error.message || 'Could not remove passkey');
+              } else {
+                Alert.alert('Success', 'Passkey removed successfully');
+                loadPasskeys();
+              }
+            } catch (error) {
+              console.error('Error removing passkey:', error);
+              Alert.alert('Error', 'An error occurred while removing passkey');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -294,6 +393,63 @@ const Profile = () => {
           <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
         </TouchableOpacity>
 
+        {/* Passkeys */}
+        {passkeySupported && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Biometric Authentication</Text>
+
+            <View style={[styles.menuItem, { backgroundColor: colorScheme === 'dark' ? '#1c1c1e' : '#fff' }]}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#007AFF20' }]}>
+                  <MaterialIcons name="fingerprint" size={24} color="#007AFF" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.menuItemText, { color: colors.text }]}>Passkeys</Text>
+                  <Text style={[styles.menuItemSubtext, { color: colors.tabIconDefault }]}>
+                    {passkeys.length} active {passkeys.length === 1 ? 'passkey' : 'passkeys'}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={handleAddPasskey}
+              >
+                <Text style={styles.addButtonText}>+ Add</Text>
+              </TouchableOpacity>
+            </View>
+
+            {passkeys.length > 0 && (
+              <View style={[styles.passkeysList, { backgroundColor: colorScheme === 'dark' ? '#1c1c1e' : '#fff' }]}>
+                {passkeys.map((passkey, index) => (
+                  <View
+                    key={passkey.id}
+                    style={[
+                      styles.passkeyItem,
+                      { borderBottomColor: colors.tabIconDefault },
+                      index === passkeys.length - 1 && styles.lastPasskeyItem,
+                    ]}
+                  >
+                    <View style={styles.passkeyInfo}>
+                      <Text style={[styles.passkeyPlatform, { color: colors.text }]}>
+                        {passkey.platform}
+                      </Text>
+                      <Text style={[styles.passkeyDate, { color: colors.tabIconDefault }]}>
+                        Added {new Date(passkey.createdAt).toLocaleDateString()}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => handleRemovePasskey(passkey.credentialId)}
+                      style={styles.removeButton}
+                    >
+                      <Text style={styles.removeButtonText}>Remove</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
         {/* Language And Preferences */}
         <TouchableOpacity
           style={[styles.menuItem, { backgroundColor: colorScheme === 'dark' ? '#1c1c1e' : '#fff' }]}
@@ -486,6 +642,7 @@ export default Profile;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginBottom: 120
   },
   centered: {
     justifyContent: 'center',
@@ -493,6 +650,17 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
+  },
+  section: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    marginBottom: 8,
+    marginLeft: 16,
+    opacity: 0.6,
   },
   profileHeader: {
     alignItems: 'center',
@@ -546,6 +714,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 12,
     marginBottom: 8,
+    width: '100%',
   },
   menuItemLeft: {
     flexDirection: 'row',
@@ -683,5 +852,57 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 16,
     marginTop: 20,
+  },
+  menuItemSubtext: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  addButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  passkeysList: {
+    borderRadius: 12,
+    marginTop: 8,
+    paddingHorizontal: 16,
+  },
+  passkeyItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  lastPasskeyItem: {
+    borderBottomWidth: 0,
+  },
+  passkeyInfo: {
+    flex: 1,
+  },
+  passkeyPlatform: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  passkeyDate: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  removeButton: {
+    backgroundColor: '#FF453A20',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  removeButtonText: {
+    color: '#FF453A',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

@@ -8,6 +8,13 @@
       "when": 1759473057158,
       "tag": "0000_wet_serpent_society",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1759492356811,
+      "tag": "0001_naive_the_professor",
+      "breakpoints": true
     }
   ]
 }
