@@ -36,10 +36,10 @@ export default function RootLayout() {
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
+    if (loaded && !isPending) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [loaded, isPending]);
 
   useEffect(() => {
     if (!isPending && session?.user) {
@@ -52,7 +52,7 @@ export default function RootLayout() {
     configureGoogleSignIn();
   }, []);
 
-  if (!loaded) {
+  if (!loaded || isPending) {
     return null;
   }
 
@@ -68,7 +68,7 @@ function RootLayoutNav() {
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen  name="(tabs)" options={{ headerShown: true, title: 'Home' }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
     </ThemeProvider>

@@ -2,6 +2,7 @@ import { API_BASE_URL } from "@/src/constants";
 import { expoClient } from "@better-auth/expo/client";
 import { emailOTPClient, lastLoginMethodClient, multiSessionClient, phoneNumberClient, twoFactorClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
+import { expoPasskeyClient } from "expo-passkey/native";
 import * as SecureStore from "expo-secure-store";
 
 export const authClient = createAuthClient({
@@ -12,6 +13,7 @@ export const authClient = createAuthClient({
             storagePrefix: "rendercondemo2025",
             storage: SecureStore,
         }),
+        expoPasskeyClient(),
         twoFactorClient(),
         phoneNumberClient(),
         emailOTPClient(),
